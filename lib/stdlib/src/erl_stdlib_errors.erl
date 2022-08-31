@@ -120,9 +120,13 @@ format_binary_error(part=Name, [Subject, PosLen], Cause) ->
         {Pos,Len} when is_integer(Pos), is_integer(Len) ->
             case format_binary_error(Name, [Subject,Pos,Len], Cause) of
                 [Arg1,[],[]] ->
-                    [Arg1];
-                [Arg1,_,_] ->
-                    [Arg1,range]
+                    [Arg1, []];
+                [Arg1,range,_] ->
+                    [Arg1,range];
+                [Arg1,_,range] ->
+                    [Arg1,range];
+                Errors ->
+                    Errors
             end;
         _ ->
             [must_be_binary(Subject),<<"not a valid {Pos,Length} tuple">>]
@@ -130,13 +134,9 @@ format_binary_error(part=Name, [Subject, PosLen], Cause) ->
 format_binary_error(part, [Subject, Pos, Len], _) ->
     case [must_be_binary(Subject),must_be_position(Pos),must_be_integer(Len)] of
         [[],[],[]] ->
-            Arg2 = if
-                       Pos > byte_size(Subject) -> range;
-                       true -> []
-                   end,
-            case Arg2 of
-                [] -> [[],[],range];
-                range -> [[],Arg2]
+            if
+                Pos > byte_size(Subject) ->  [[],range, []];
+                true ->  [[],[],range]
             end;
         Errors ->
             Errors
